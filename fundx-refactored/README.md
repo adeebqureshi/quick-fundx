@@ -24,6 +24,17 @@ npm run dev
 
 The frontend defaults to `http://localhost:4000/api/v1` via `VITE_API_URL`.
 
+### Run the UI with the dependency-free mock API
+
+If you want to run and review the app before installing the full PostgreSQL/Prisma/Express stack, start the built-in mock API in one terminal and Vite in another:
+
+```bash
+npm run dev:mock-api
+npm run dev
+```
+
+The mock API implements the frontend-facing health, auth, campaign marketplace, and dashboard endpoints at `http://localhost:4000/api/v1`. You can sign in with `customer@quickfundx.test` / `password123` or `admin@quickfundx.test` / `password123`.
+
 ## API Overview
 
 All API routes are versioned under `/api/v1`.

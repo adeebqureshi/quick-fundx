@@ -15,7 +15,8 @@
     "build:api": "tsc -p server/tsconfig.json",
     "prisma:generate": "prisma generate --schema server/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema server/prisma/schema.prisma",
-    "prisma:deploy": "prisma migrate deploy --schema server/prisma/schema.prisma"
+    "prisma:deploy": "prisma migrate deploy --schema server/prisma/schema.prisma",
+    "dev:mock-api": "node server/mock-api.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
