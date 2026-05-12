@@ -7,7 +7,7 @@ const REFRESH_TOKEN_KEY = "qfx-refresh-token";
 export interface ApiEnvelope<T> { success: boolean; data: T; message?: string }
 export interface AuthPayload { user: User; accessToken: string; refreshToken: string }
 export interface LoginInput { email: string; password: string }
-export interface RegisterInput { name: string; email: string; password: string; role: "CUSTOMER" | "DSA" | "LENDER" | "ADMIN"; phone?: string }
+export interface RegisterInput { name: string; email: string; password: string; role: "CUSTOMER" | "DSA"; phone?: string }
 
 export class ApiError extends Error {
   constructor(message: string, public status: number, public details?: unknown) { super(message); }
