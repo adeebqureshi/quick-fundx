@@ -25,7 +25,7 @@ type RegistrationRole = (typeof roles)[number]["value"];
 const Register = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { register } = useAuth();
 
   const [role, setRole] = useState<RegistrationRole>(
     (params.get("role") as RegistrationRole) ?? "customer"
@@ -57,7 +57,7 @@ const Register = () => {
     return errs;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length > 0) {
@@ -67,17 +67,23 @@ const Register = () => {
     setErrors({});
     setLoading(true);
 
-    setTimeout(() => {
-      // Use the chosen role email to ensure correct routing
-      const syntheticEmail =
-        role === "dsa" ? `dsa.${email}` : email;
-      login(syntheticEmail, password);
+    try {
+      const user = await register({
+        name,
+        email,
+        password,
+        role: role === "dsa" ? "DSA" : "CUSTOMER",
+        phone: mobile || undefined,
+      });
       toast.success("Account created!", {
         description: "Welcome to Quick Fundx.",
       });
-      navigate(roleToPath(role), { replace: true });
+      navigate(roleToPath(user.role), { replace: true });
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : "Unable to create account." });
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -218,6 +224,10 @@ const Register = () => {
               <p className="text-xs text-destructive">{errors.password}</p>
             )}
           </div>
+
+          {errors.form && (
+            <p className="text-sm text-destructive font-medium">{errors.form}</p>
+          )}
 
           <Button
             type="submit"

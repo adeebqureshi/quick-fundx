@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole { CUSTOMER ADMIN LENDER DSA CREATOR INVESTOR }
+enum KycStatus { NOT_STARTED PENDING VERIFIED REJECTED }
+enum CampaignStatus { DRAFT PENDING_REVIEW APPROVED REJECTED LIVE PAUSED COMPLETED CANCELLED }
+enum CampaignVisibility { PUBLIC PRIVATE UNLISTED }
+enum PaymentStatus { PENDING AUTHORIZED CAPTURED FAILED REFUNDED CANCELLED }
+enum NotificationType { SYSTEM CAMPAIGN DONATION MESSAGE SECURITY ADMIN }
+enum ReportStatus { OPEN REVIEWING RESOLVED DISMISSED }
+enum WithdrawalStatus { REQUESTED APPROVED REJECTED PAID }
+enum TicketStatus { OPEN PENDING RESOLVED CLOSED }
+
+model User {
+  id                  String                 @id @default(cuid())
+  name                String
+  username            String?                @unique
+  email               String                 @unique
+  password            String
+  avatar              String?
+  bio                 String?
+  phone               String?
+  socialLinks         Json?
+  role                UserRole               @default(CUSTOMER)
+  verified            Boolean                @default(false)
+  kycStatus           KycStatus              @default(NOT_STARTED)
+  bannedAt            DateTime?
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  campaigns           Campaign[]             @relation("CampaignCreator")
+  donations           Donation[]             @relation("DonationDonor")
+  comments            Comment[]
+  likes               Like[]
+  bookmarks           Bookmark[]
+  notifications       Notification[]
+  reports             Report[]               @relation("ReportReporter")
+  sentMessages        Message[]              @relation("SentMessages")
+  receivedMessages    Message[]              @relation("ReceivedMessages")
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  otpTokens           OtpToken[]
+  reviews             Review[]
+  teamMemberships     TeamMember[]
+  supportTickets      SupportTicket[]
+  activityLogs        ActivityLog[]
+  adminActions        AdminAction[]           @relation("AdminActor")
+
+  @@index([role, createdAt])
+  @@index([kycStatus])
+}
+
+model Campaign {
+  id                 String                 @id @default(cuid())
+  title              String
+  slug               String                 @unique
+  description        String
+  richContent        Json?
+  category           String
+  targetAmount       Decimal                @db.Decimal(14, 2)
+  raisedAmount       Decimal                @default(0) @db.Decimal(14, 2)
+  currency           String                 @default("INR")
+  images             String[]
+  creatorId          String
+  creator            User                   @relation("CampaignCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  status             CampaignStatus         @default(PENDING_REVIEW)
+  deadline           DateTime
+  tags               String[]
+  location           String?
+  featured           Boolean                @default(false)
+  visibility         CampaignVisibility     @default(PUBLIC)
+  approvedAt         DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  donations          Donation[]
+  comments           Comment[]
+  likes              Like[]
+  bookmarks          Bookmark[]
+  reports            Report[]
+  updates            CampaignUpdate[]
+  withdrawalRequests WithdrawalRequest[]
+  analytics          AnalyticsEvent[]
+  reviews            Review[]
+  teamMembers        TeamMember[]
+
+  @@index([status, visibility, featured])
+  @@index([category, createdAt])
+  @@index([creatorId, status])
+}
+
+model Donation {
+  id                 String        @id @default(cuid())
+  donorId            String
+  campaignId         String
+  amount             Decimal       @db.Decimal(14, 2)
+  currency           String        @default("INR")
+  paymentStatus      PaymentStatus @default(PENDING)
+  transactionId      String?       @unique
+  gateway            String?
+  paymentGatewayData Json?
+  refundedAt         DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  donor              User          @relation("DonationDonor", fields: [donorId], references: [id])
+  campaign           Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([donorId, createdAt])
+  @@index([campaignId, paymentStatus])
+}
+
+model Comment { id String @id @default(cuid()) content String userId String campaignId String parentId String? createdAt DateTime @default(now()) updatedAt DateTime @updatedAt user User @relation(fields: [userId], references: [id]) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@index([campaignId, createdAt]) }
+model Like { id String @id @default(cuid()) userId String campaignId String createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@unique([userId, campaignId]) }
+model Bookmark { id String @id @default(cuid()) userId String campaignId String createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@unique([userId, campaignId]) }
+model Notification { id String @id @default(cuid()) userId String type NotificationType title String body String readAt DateTime? metadata Json? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id], onDelete: Cascade) @@index([userId, readAt, createdAt]) }
+model Report { id String @id @default(cuid()) reporterId String campaignId String? reason String details String? status ReportStatus @default(OPEN) createdAt DateTime @default(now()) reporter User @relation("ReportReporter", fields: [reporterId], references: [id]) campaign Campaign? @relation(fields: [campaignId], references: [id]) @@index([status, createdAt]) }
+model Message { id String @id @default(cuid()) senderId String receiverId String body String readAt DateTime? createdAt DateTime @default(now()) sender User @relation("SentMessages", fields: [senderId], references: [id]) receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id]) @@index([senderId, receiverId, createdAt]) }
+model AdminAction { id String @id @default(cuid()) actorId String action String targetType String targetId String metadata Json? createdAt DateTime @default(now()) actor User @relation("AdminActor", fields: [actorId], references: [id]) @@index([targetType, targetId]) }
+model CampaignUpdate { id String @id @default(cuid()) campaignId String title String body String images String[] createdAt DateTime @default(now()) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@index([campaignId, createdAt]) }
+model WithdrawalRequest { id String @id @default(cuid()) campaignId String amount Decimal @db.Decimal(14, 2) status WithdrawalStatus @default(REQUESTED) bankDetails Json createdAt DateTime @default(now()) updatedAt DateTime @updatedAt campaign Campaign @relation(fields: [campaignId], references: [id]) @@index([status, createdAt]) }
+model AnalyticsEvent { id String @id @default(cuid()) campaignId String? userId String? type String metadata Json? createdAt DateTime @default(now()) campaign Campaign? @relation(fields: [campaignId], references: [id]) @@index([type, createdAt]) }
+model ActivityLog { id String @id @default(cuid()) userId String? action String ip String? userAgent String? metadata Json? createdAt DateTime @default(now()) user User? @relation(fields: [userId], references: [id]) @@index([userId, createdAt]) }
+model OtpToken { id String @id @default(cuid()) userId String purpose String codeHash String expiresAt DateTime consumedAt DateTime? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id], onDelete: Cascade) @@index([userId, purpose, expiresAt]) }
+model PasswordResetToken { id String @id @default(cuid()) userId String tokenHash String expiresAt DateTime consumedAt DateTime? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id], onDelete: Cascade) @@index([userId, expiresAt]) }
+model Session { id String @id @default(cuid()) userId String refreshTokenHash String ip String? userAgent String? expiresAt DateTime revokedAt DateTime? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id], onDelete: Cascade) @@index([userId, revokedAt]) }
+model Review { id String @id @default(cuid()) userId String campaignId String rating Int body String? createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@unique([userId, campaignId]) }
+model TeamMember { id String @id @default(cuid()) userId String campaignId String role String createdAt DateTime @default(now()) user User @relation(fields: [userId], references: [id]) campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade) @@unique([userId, campaignId]) }
+model SupportTicket { id String @id @default(cuid()) userId String subject String body String status TicketStatus @default(OPEN) createdAt DateTime @default(now()) updatedAt DateTime @updatedAt user User @relation(fields: [userId], references: [id]) @@index([status, createdAt]) }

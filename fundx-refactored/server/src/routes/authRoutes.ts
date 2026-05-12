@@ -1,0 +1,13 @@
+import { Router } from "express";
+import { authenticate } from "../middlewares/authMiddleware.js";
+import { validate } from "../middlewares/validate.js";
+import * as c from "../controllers/authController.js";
+import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema } from "../validators/authValidators.js";
+export const authRouter = Router();
+authRouter.post("/register", validate(registerSchema), c.register);
+authRouter.post("/login", validate(loginSchema), c.login);
+authRouter.post("/logout", authenticate, c.logout);
+authRouter.get("/me", authenticate, c.me);
+authRouter.post("/forgot-password", validate(forgotPasswordSchema), c.forgotPassword);
+authRouter.post("/reset-password", validate(resetPasswordSchema), c.resetPassword);
+authRouter.post("/verify-otp", c.verifyOtp);
