@@ -16,7 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -30,21 +30,15 @@ const Login = () => {
     }
 
     setLoading(true);
-    // Simulate async login (replace with real API call)
-    setTimeout(() => {
-      login(email, password);
+    try {
+      const user = await login(email, password);
       toast.success("Welcome back!", { description: "You've been signed in." });
-      // Navigate based on role derived in the store
-      const role = email.includes("admin")
-        ? "admin"
-        : email.includes("dsa") || email.includes("partner")
-          ? "dsa"
-          : email.includes("lender")
-            ? "lender"
-            : "customer";
-      navigate(roleToPath(role), { replace: true });
+      navigate(roleToPath(user.role), { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in.");
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (
@@ -131,9 +125,7 @@ const Login = () => {
           </p>
 
           <p className="text-center text-xs text-muted-foreground bg-muted/50 rounded-lg p-2">
-            Demo: Use <strong>admin@</strong>, <strong>dsa@</strong>,{" "}
-            <strong>lender@</strong>, or any email to access different dashboards.
-            Any password ≥ 6 chars works.
+            Sign in with an account created via the API. Admin and partner roles are routed automatically from your server profile.
           </p>
         </form>
       </div>

@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { authRouter } from "./authRoutes.js";
+import { campaignRouter } from "./campaignRoutes.js";
+import { adminRouter } from "./adminRoutes.js";
+import { authenticate } from "../middlewares/authMiddleware.js";
+import { dashboard } from "../controllers/dashboardController.js";
+export const apiRouter = Router();
+apiRouter.get("/health", (_req, res) => res.json({ success: true, service: "quick-fundx-api" }));
+apiRouter.use("/auth", authRouter);
+apiRouter.use("/campaigns", campaignRouter);
+apiRouter.use("/admin", adminRouter);
+apiRouter.get("/dashboard", authenticate, dashboard);
