@@ -1,0 +1,1 @@
+"""QuickFundX API application package."""
