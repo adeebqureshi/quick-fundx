@@ -12,6 +12,10 @@ import Register from "./pages/Register";
 import BecomePartner from "./pages/BecomePartner";
 import Eligibility from "./pages/Eligibility";
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import CustomerApplications from "./pages/customer/Applications";
+import Apply from "./pages/customer/Apply";
+import CustomerDocuments from "./pages/customer/Documents";
+import CustomerProfile from "./pages/customer/Profile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import LenderDashboard from "./pages/lender/LenderDashboard";
 import DSADashboard from "./pages/dsa/DSADashboard";
@@ -48,7 +52,11 @@ const App = () => (
 
               {/* Protected: Customer */}
               <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-                <Route path="/customer/*" element={<CustomerDashboard />} />
+                <Route path="/customer" element={<CustomerDashboard />} />
+                <Route path="/customer/applications" element={<CustomerApplications />} />
+                <Route path="/customer/apply" element={<Apply />} />
+                <Route path="/customer/documents" element={<CustomerDocuments />} />
+                <Route path="/customer/profile" element={<CustomerProfile />} />
               </Route>
 
               {/* Protected: Admin */}

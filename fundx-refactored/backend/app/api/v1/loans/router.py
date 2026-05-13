@@ -67,6 +67,37 @@ async def list_applications(
     return success_json([LoanApplicationOut.model_validate(r).model_dump() for r in rows])
 
 
+@router.get("/applications/{app_id}")
+async def get_application(
+    app_id: str,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    from uuid import UUID
+
+    row = await loan_service.get_application(db, app_id=UUID(app_id), user=user)
+    return success_json(LoanApplicationOut.model_validate(row).model_dump())
+
+
+@router.post("/applications")
+async def create_application(
+    body: LoanApplicationCreateIn,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    row = await loan_service.create_application(db, customer=user, body=body)
+    return success_json(LoanApplicationOut.model_validate(row).model_dump(), status_code=201)
+
+
+@router.get("/applications")
+async def list_applications(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    rows = await loan_service.list_my_applications(db, user=user)
+    return success_json([LoanApplicationOut.model_validate(r).model_dump() for r in rows])
+
+
 @router.get("/applications/{application_id}")
 async def get_application(
     application_id: str,

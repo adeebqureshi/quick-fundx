@@ -71,3 +71,16 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Production deployment with Docker
+
+This repository includes a production compose file at `docker-compose.prod.yml`.
+
+To build and start the application stack locally:
+
+```sh
+cd fundx-refactored
+docker compose -f docker-compose.prod.yml up --build
+```
+
+The frontend will be served on port `80`, and the backend API will be available at `http://localhost/api/v1`.

@@ -76,6 +76,22 @@ class LoanProductOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LoanApplicationOut(BaseModel):
+    id: UUID
+    application_number: str
+    loan_product_id: UUID
+    requested_amount: Decimal
+    approved_amount: Decimal | None
+    tenure_months: int
+    interest_rate: Decimal | None
+    status: LoanApplicationStatus
+    ai_eligibility_score: Decimal | None
+    assigned_bank_id: UUID | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class EligibilityIn(BaseModel):
     loan_product_id: UUID
     monthly_income: Decimal = Field(gt=0)
